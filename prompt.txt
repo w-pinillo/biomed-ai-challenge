@@ -1,0 +1,86 @@
+Implement a reproducible, production-quality Python solution to perform multi-label classification of medical literature (title + abstract → one or more of: Cardiovascular, Neurological, Hepatorenal, Oncological). Use a **hybrid approach**: Pre-trained biomedical language model (BioBERT) as the primary classifier, traditional ML methods as supporting/ensemble members, and explicit domain-specific features to boost performance.
+
+GOALS / ACCEPTANCE CRITERIA
+1. Primary metric: weighted F1 (report test/holdout score).
+2. Provide per-label confusion matrices (binary per-label), micro/macro/weighted precision, recall, F1, and a short error analysis with example failure cases.
+3. Deliverables (repo / output folder):
+   - runnable Python code (scripts / modules) and at least one Jupyter notebook demonstrating training and evaluation.
+   - trained model artifacts (weights), training logs, and evaluation reports (CSV/JSON).
+   - README with installation & run instructions, reproducibility seeds, and file structure.
+   - design diagram (PNG/SVG) of the pipeline and a short final report (markdown or PDF).
+   - Visualizations using V0: at least two charts interpreting model performance (e.g., per-class F1 bar chart, PR-curves or calibration plots). Include evidence (prompts/configs/screenshots) for V0 usage.
+
+DATA
+- Input CSV (or similar) with columns: title, abstract, group. Multi-label values separated by '|' (e.g., "neurological|hepatorenal").
+- Dataset size: 3,565 records (combine NCBI Disease Corpus, BC5CDR, synthetic).
+- Assume dataset is available at ./data/medical_articles.csv unless a different path is passed via CLI config.
+
+IMPLEMENTATION REQUIREMENTS (must follow)
+- Language: Python 3.9+.
+- Use standard libraries: transformers (Hugging Face), datasets, PyTorch or TensorFlow (PyTorch preferred), scikit-learn, lightgbm/xgboost, pandas, numpy, matplotlib, seaborn (visualization allowed), optuna (hyperparameter tuning optional).
+- Reproducibility: set random seeds for numpy, torch, and any other lib. Document GPU vs CPU behavior.
+- Multi-label handling: use sigmoid output with binary cross-entropy (BCEWithLogitsLoss) for the neural model; for classical models, use One-vs-Rest or multi-label wrappers as appropriate.
+- Evaluation: stratified multi-label split or iterative stratification (e.g., `iterative_train_test_split`) with an explicit test/holdout set. Use cross-validation for validation and hyperparameter tuning if compute allows.
+- Optimization/early stopping: implement early stopping and learning rate scheduler for transformer fine-tuning.
+
+PIPELINE
+1. EDA & preprocessing
+   - Analyze class balance, label co-occurrence, token lengths, common tokens/phrases per class.
+   - Clean text: lowercasing (optional), remove excessive whitespace, preserve medically-relevant tokens (do not aggressively lemmatize or remove punctuation that might be meaningful).
+   - Create domain-specific features: medical entity counts (e.g., counts of disease terms, organ mentions), presence of keywords/regex for cardiology/neurology/etc., POS or section heuristics if present.
+   - Save preprocessed dataset and tokenized inputs.
+
+2. Feature engineering
+   - TF-IDF (title + abstract combined) for classical models.
+   - Domain-specific numeric/categorical features appended to classical features or used in ensemble.
+
+3. Models
+   A. Primary — Pre-trained biomedical transformer:
+      - Candidate models: BioBERT (use a PubMed-derived checkpoint). Fine-tune with a multi-label head (sigmoid outputs).
+      - Training: small number of epochs (3–6), gradient accumulation if needed, batch size tuned to GPU memory, learning rate schedule, weight decay, class weighting or focal loss if imbalance severe.
+      - Output: model checkpoint + inference script.
+
+   B. Supporting classical models:
+      - TF-IDF + LinearSVC or LogisticRegression (One-vs-Rest with calibrated probabilities).
+      - LightGBM / XGBoost trained on TF-IDF + domain features.
+      - Save best classical models.
+
+   C. Ensemble (meta):
+      - Simple stacking or weighted averaging of probabilities from the transformer and the best classical model(s). Use a logistic regression / small MLP as a stacker that takes model probabilities + domain features, trained on validation folds.
+      - Calibrate probabilities if necessary.
+
+4. Thresholding
+   - Use per-label thresholding (optimize thresholds on validation set to maximize weighted F1).
+
+5. Hyperparameter tuning
+   - Use grid search or Optuna on a limited search space (epochs, lr, weight decay, batch size, LightGBM params).
+
+6. Final evaluation & reporting
+   - Evaluate on held-out test set and produce required metrics and confusion matrices.
+   - Provide example true positives, false positives, false negatives for each label.
+
+REQUIREMENTS FOR THE GENERATED REPO
+- CLI: provide simple CLI commands to run the full pipeline and to run inference on new CSV.
+- Modular code: e.g., src/data.py, src/eda.py, src/preprocess.py, src/models/transformer_trainer.py, src/models/classical.py, src/ensemble.py, src/eval.py
+- Notebook: at least one `notebooks/analysis.ipynb` reproducing EDA, training summary, and final evaluation.
+- README: installation, quick start, reproducibility, expected outputs.
+- Small, clear config file (YAML/JSON) with dataset path, hyperparameters, seeds, model choices.
+
+DOCUMENTATION & JUSTIFICATION (include in final report)
+- Short justification of hybrid approach: why biomedical LM as primary (handles domain semantics), why classical models help (complementary signal from TF-IDF and engineered features), and why domain-specific features increase recall/precision on edge cases.
+- Brief architecture diagram and explanation of ensemble strategy.
+- Limitations and suggested next steps.
+
+ACCEPTANCE TEST (automated)
+- Provide a script `scripts/run_e2e.sh` that:
+  1) ingests `./data/medical_articles.csv`
+  2) runs preprocessing, trains or loads models (option to skip training and use pre-saved artifacts)
+  3) outputs evaluation JSON with weighted F1 >= baseline (include baseline from a simple TF-IDF+LogReg).
+- Provide unit test or smoke test verifying end-to-end run completes and produces metrics file.
+
+ADDITIONAL NOTES
+- Keep logs and seed decisions explicit in outputs for reproducibility.
+- If compute is limited, run a smaller fine-tuning (fewer epochs) and include instructions for full-run hyperparameters.
+- Use clear filenames and date-stamped artifacts.
+
+Deliver the complete repository, a short final report, and the visualization artifacts requested above.

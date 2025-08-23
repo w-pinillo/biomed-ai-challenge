@@ -1,0 +1,23 @@
+# Model Training Configuration
+
+# Reproducibility
+seed: 42
+
+# Dataset paths
+preprocessed_data: "data/preprocessed_articles.csv"
+output_dir: "models/biobert_finetuned"
+
+# Transformer model parameters
+model_checkpoint: "dmis-lab/biobert-v1.1"
+num_epochs: 4
+batch_size: 8  # Adjust based on GPU memory
+learning_rate: 2.0e-5
+weight_decay: 0.01
+max_length: 512 # Max token length for tokenizer
+
+# Classical model paths
+classical_model_path: "models/classical_logreg.joblib"
+
+# Evaluation
+reports_dir: "reports"
+metrics_output_path: "reports/metrics.json"
