@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import classification_report
@@ -15,12 +14,12 @@ from iterstrat.ml_stratifiers import MultilabelStratifiedShuffleSplit
 
 # Define paths
 PREPROCESSED_PATH = "data/preprocessed_articles.csv"
+EMBEDDINGS_PATH = "data/biobert_embeddings.npy"
 MODEL_OUTPUT_DIR = "models"
-MODEL_OUTPUT_PATH = os.path.join(MODEL_OUTPUT_DIR, "classical_logreg.joblib")
+MODEL_OUTPUT_PATH = os.path.join(MODEL_OUTPUT_DIR, "classical_logreg_bilstm.joblib")
 
 # Define labels and features
 LABELS = ['Cardiovascular', 'Neurological', 'Hepatorenal', 'Oncological']
-TEXT_FEATURE = 'full_text_cleaned'
 DOMAIN_FEATURES = [
     'cardiovascular_keywords_count',
     'neurological_keywords_count',
@@ -32,38 +31,34 @@ def main():
     """
     Main function to train and evaluate the classical model.
     """
-    print("Starting classical model training...")
+    print("Starting classical model training with BioBERT embeddings...")
 
     # Load data
     df = pd.read_csv(PREPROCESSED_PATH)
     print(f"Loaded {len(df)} records from {PREPROCESSED_PATH}")
+    
+    # Load BioBERT embeddings
+    print(f"Loading BioBERT embeddings from {EMBEDDINGS_PATH}...")
+    embeddings = np.load(EMBEDDINGS_PATH)
+    print(f"Loaded embeddings of shape: {embeddings.shape}")
 
     # Define X and y
-    X = df[[TEXT_FEATURE] + DOMAIN_FEATURES]
+    X_domain = df[DOMAIN_FEATURES].values
+    X = np.concatenate([embeddings, X_domain], axis=1)
     y = df[LABELS].values
 
     # Multi-label stratified split
-    # n_splits=1 because we want a single train/test split
     msss = MultilabelStratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
     train_index, test_index = next(msss.split(X, y))
 
-    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
 
     print(f"Train set size: {len(X_train)}")
     print(f"Test set size: {len(X_test)}")
 
-    # Create a column transformer to apply different transformations to different columns
-    # We use TfidfVectorizer for the text and pass through the numeric domain features
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2)), TEXT_FEATURE),
-            ('domain', 'passthrough', DOMAIN_FEATURES)
-        ])
-
-    # Create the full pipeline
+    # Create the model pipeline
     pipeline = Pipeline([
-        ('preprocessor', preprocessor),
         ('classifier', OneVsRestClassifier(LogisticRegression(solver='liblinear', random_state=42)))
     ])
 
