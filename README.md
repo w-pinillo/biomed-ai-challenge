@@ -93,30 +93,12 @@ Para ejecutar el pipeline completo de principio a fin, tienes dos opciones:
     Si ya has entrenado los modelos o has descargado los artefactos pre-entrenados, puedes saltarte el paso de entrenamiento del modelo clásico. Esto es útil para una evaluación rápida o para verificar los resultados sin consumir recursos de entrenamiento.
 
     ```bash
-bash scripts/run_e2e.sh --skip-training
+    bash scripts/run_e2e.sh --skip-training
     ```
 
-Si deseas ejecutar los pasos individualmente o realizar inferencia con un archivo CSV, aquí tienes los comandos:
+Pasos para realizar inferencia con un archivo CSV:
 
-1. **Ejecutar el preprocesamiento de datos**
-   Este script limpia el texto, genera las características de dominio y guarda el archivo procesado.
-   ```bash
-   python3 src/preprocess.py
-   ```
-
-2. **Entrenar y comparar los modelos clásicos**
-   Este script entrena y evalúa los modelos de Regresión Logística y XGBoost sobre los embeddings de BioBERT y las características de dominio.
-   ```bash
-   python3 -m src.models.classical
-   ```
-
-3. **Evaluar el modelo de ensamble**
-   Este script combina el modelo clásico seleccionado con el modelo BioBERT base y evalúa el rendimiento del ensamble.
-   ```bash
-   python3 -m src.models.ensemble
-   ```
-
-4. **Evaluar la Solución con un Archivo CSV**
+1. **Evaluar la Solución con un Archivo CSV**
    Este script permite cargar un archivo CSV, realizar predicciones y, si el CSV incluye las etiquetas verdaderas, evaluar el rendimiento del modelo.
 
    ```bash
