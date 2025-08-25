@@ -52,7 +52,7 @@ Sigue estos pasos para configurar el entorno de desarrollo localmente.
 1. **Clonar el repositorio**
    ```bash
    git clone https://github.com/w-pinillo/biomed-ai-challenge.git
-   cd <NOMBRE-DEL-REPOSITORIO>
+   cd biomed-ai-challenge
    ```
 
 2. **Crear un entorno virtual**
