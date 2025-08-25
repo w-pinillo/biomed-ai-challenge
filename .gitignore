@@ -13,6 +13,7 @@ data/*.csv
 
 # Model files
 models/*.joblib
+!models/classical_logistic_regression_tuned.joblib
 models/biobert_finetuned/
 
 # Output files
