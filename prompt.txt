@@ -36,9 +36,9 @@ PIPELINE
 
 3. Models
    A. Primary — Pre-trained biomedical transformer:
-      - Candidate models: BioBERT (use a PubMed-derived checkpoint). Fine-tune with a multi-label head (sigmoid outputs).
-      - Training: small number of epochs (3–6), gradient accumulation if needed, batch size tuned to GPU memory, learning rate schedule, weight decay, class weighting or focal loss if imbalance severe.
-      - Output: model checkpoint + inference script.
+      - Candidate models: BioBERT (use a PubMed-derived checkpoint). Use as a feature extractor to generate rich embeddings and for direct inference in an ensemble.
+      - Rationale: Given the dataset size, fine-tuning is computationally expensive and may not yield significant gains over using the powerful base model's representations. The primary approach is a hybrid one, focusing on the ensemble.
+      - Output: Embeddings file (biobert_embeddings.npy) and on-the-fly predictions from the base model.
 
    B. Supporting classical models:
       - TF-IDF + LinearSVC or LogisticRegression (One-vs-Rest with calibrated probabilities).
@@ -67,7 +67,7 @@ REQUIREMENTS FOR THE GENERATED REPO
 - Small, clear config file (YAML/JSON) with dataset path, hyperparameters, seeds, model choices.
 
 DOCUMENTATION & JUSTIFICATION (include in final report)
-- Short justification of hybrid approach: why biomedical LM as primary (handles domain semantics), why classical models help (complementary signal from TF-IDF and engineered features), and why domain-specific features increase recall/precision on edge cases.
+- Short justification of hybrid approach: why using a biomedical LM as a feature extractor is powerful (it understands domain semantics), why classical models are effective (they learn from the rich embeddings and engineered features), and why domain-specific features can still boost performance on specific cases.
 - Brief architecture diagram and explanation of ensemble strategy.
 - Limitations and suggested next steps.
 

@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sklearn.metrics import classification_report, f1_score
 from iterstrat.ml_stratifiers import MultilabelStratifiedShuffleSplit
 import yaml
+from src.eval import analyze_errors # New import
 
 def load_config(config_path='config.yml'):
     """Loads the YAML configuration file."""
@@ -42,7 +43,7 @@ def main():
     texts_test = df['full_text_cleaned'].iloc[test_index].tolist()
 
     # Load trained classical model
-    classical_model = joblib.load('models/classical_logreg_bilstm.joblib')
+    classical_model = joblib.load('models/classical_logistic_regression_tuned.joblib')
     
     # Get predictions from classical model
     classical_pred_proba = classical_model.predict_proba(X_test)
@@ -82,13 +83,16 @@ def main():
             best_weights = (weight_classical, weight_biobert)
 
     # Evaluate ensemble with best weights
-    print(f"\nBest weights: (classical: {best_weights[0]:.1f}, biobert: {best_weights[1]:.1f}) with F1-score: {best_f1:.4f})")
+    print(f"\nBest weights: (classical: {best_weights[0]:.1f}, biobert: {best_weights[1]:.1f}) with F1-score: {best_f1:.4f})\n")
     ensemble_pred_proba = (best_weights[0] * classical_pred_proba) + (best_weights[1] * biobert_pred_proba)
     ensemble_preds = (ensemble_pred_proba > 0.5).astype(int)
     
-    print("\n--- Ensemble Classification Report with Best Weights ---")
+    print("--- Ensemble Classification Report with Best Weights ---")
     report = classification_report(y_test, ensemble_preds, target_names=LABELS, zero_division=0)
     print(report)
+
+    # Perform error analysis
+    analyze_errors(y_test, ensemble_preds, texts_test, LABELS) # New function call
 
 if __name__ == "__main__":
     main()

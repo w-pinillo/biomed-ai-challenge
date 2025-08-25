@@ -1,0 +1,11 @@
+iterative_stratification==0.1.9
+joblib==1.5.1
+numpy==2.3.2
+pandas==2.3.2
+PyYAML==6.0.2
+scikit_learn==1.7.1
+torch==2.8.0
+tqdm==4.67.1
+transformers==4.55.4
+xgboost==3.0.4
+optuna
