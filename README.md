@@ -80,7 +80,23 @@ Sigue estos pasos para configurar el entorno de desarrollo localmente.
 
 ## Uso
 
-A continuación se muestran los comandos para ejecutar los pasos clave del pipeline.
+Para ejecutar el pipeline completo de principio a fin, tienes dos opciones:
+
+1.  **Entrenar y Evaluar (Proceso Completo):**
+    Este es el método recomendado para una ejecución completa que incluye el preprocesamiento de datos, el entrenamiento del modelo clásico y la evaluación del ensamble.
+
+    ```bash
+    bash scripts/run_e2e.sh
+    ```
+
+2.  **Solo Evaluar (Usar Modelos Pre-entrenados):**
+    Si ya has entrenado los modelos o has descargado los artefactos pre-entrenados, puedes saltarte el paso de entrenamiento del modelo clásico. Esto es útil para una evaluación rápida o para verificar los resultados sin consumir recursos de entrenamiento.
+
+    ```bash
+bash scripts/run_e2e.sh --skip-training
+    ```
+
+Si deseas ejecutar los pasos individualmente o realizar inferencia con un archivo CSV, aquí tienes los comandos:
 
 1. **Ejecutar el preprocesamiento de datos**
    Este script limpia el texto, genera las características de dominio y guarda el archivo procesado.
@@ -91,24 +107,26 @@ A continuación se muestran los comandos para ejecutar los pasos clave del pipel
 2. **Entrenar y comparar los modelos clásicos**
    Este script entrena y evalúa los modelos de Regresión Logística y XGBoost sobre los embeddings de BioBERT y las características de dominio.
    ```bash
-   venv/bin/python src/models/classical.py
+   python3 -m src.models.classical
    ```
 
 3. **Evaluar el modelo de ensamble**
    Este script combina el modelo clásico seleccionado con el modelo BioBERT base y evalúa el rendimiento del ensamble.
    ```bash
-   venv/bin/python src/models/ensemble.py
+   python3 -m src.models.ensemble
    ```
 
 4. **Evaluar la Solución con un Archivo CSV**
    Este script permite cargar un archivo CSV, realizar predicciones y, si el CSV incluye las etiquetas verdaderas, evaluar el rendimiento del modelo.
 
    ```bash
-   venv/bin/python -m src.evaluate_solution --input_csv data/medical_articles.csv
+   python3 -m src.evaluate_solution --input_csv data/medical_articles.csv
    ```
    Reemplaza `data/medical_articles.csv` con la ruta a tu archivo CSV de entrada.
 
 ## Estrategia del Modelo
+
+El repositorio incluye un modelo pre-entrenado (classical_logistic_regression_tuned.joblib, 46 KB) para permitir ejecutar las predicciones directamente sin reentrenar.
 
 Se utiliza un enfoque híbrido para aprovechar las fortalezas de diferentes tipos de modelos.
 
