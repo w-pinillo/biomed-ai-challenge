@@ -158,8 +158,7 @@ def evaluate_solution(input_csv_path, separator):
         weighted_f1 = f1_score(y_true_one_hot, ensemble_preds, average='weighted', zero_division=0)
         print(f"\nWeighted F1-score: {weighted_f1:.4f}")
 
-        # Confusion Matrix and Error Analysis
-        analyze_errors(y_true_one_hot, ensemble_preds, df['full_text_cleaned'].tolist(), LABELS)
+        
     else:
         print("\n'group' column not found in input CSV. Skipping evaluation.")
 
