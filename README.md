@@ -51,7 +51,7 @@ Sigue estos pasos para configurar el entorno de desarrollo localmente.
 
 1. **Clonar el repositorio**
    ```bash
-   git clone <URL-DEL-REPOSITORIO>
+   git clone https://github.com/w-pinillo/biomed-ai-challenge.git
    cd <NOMBRE-DEL-REPOSITORIO>
    ```
 
@@ -99,6 +99,14 @@ A continuación se muestran los comandos para ejecutar los pasos clave del pipel
    ```bash
    venv/bin/python src/models/ensemble.py
    ```
+
+4. **Evaluar la Solución con un Archivo CSV**
+   Este script permite cargar un archivo CSV, realizar predicciones y, si el CSV incluye las etiquetas verdaderas, evaluar el rendimiento del modelo.
+
+   ```bash
+   venv/bin/python -m src.evaluate_solution --input_csv data/medical_articles.csv
+   ```
+   Reemplaza `data/medical_articles.csv` con la ruta a tu archivo CSV de entrada.
 
 ## Estrategia del Modelo
 
