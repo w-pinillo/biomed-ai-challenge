@@ -29,10 +29,13 @@ DOMAIN_FEATURES = [
 def objective(trial, X_train, y_train, X_val, y_val, model_type):
     if model_type == "Logistic Regression":
         # Hyperparameters for Logistic Regression
-        c = trial.suggest_loguniform('lr_c', 1e-3, 1e3)
+        c = trial.suggest_float('lr_c', 1e-3, 1e3, log=True)
         solver = trial.suggest_categorical('lr_solver', ['liblinear', 'saga']) # saga for larger datasets, liblinear for smaller
         
-        classifier = LogisticRegression(C=c, solver=solver, random_state=42, n_jobs=-1)
+        # Set n_jobs based on solver
+        n_jobs = -1 if solver != 'liblinear' else 1
+        
+        classifier = LogisticRegression(C=c, solver=solver, random_state=42, n_jobs=n_jobs)
         
     else:
         raise ValueError("Unknown model type")
@@ -95,7 +98,12 @@ def main():
 
     # Train final Logistic Regression model with best params on train+val set
     best_lr_params = study_lr.best_params
-    final_lr_classifier = LogisticRegression(C=best_lr_params['lr_c'], solver=best_lr_params['lr_solver'], random_state=42, n_jobs=-1)
+
+    # Set n_jobs based on the best solver
+    final_solver = best_lr_params['lr_solver']
+    final_n_jobs = -1 if final_solver != 'liblinear' else 1
+
+    final_lr_classifier = LogisticRegression(C=best_lr_params['lr_c'], solver=final_solver, random_state=42, n_jobs=final_n_jobs)
     final_lr_pipeline = Pipeline([('classifier', OneVsRestClassifier(final_lr_classifier))])
     
     print("\nTraining final Logistic Regression model with best parameters on train+val set...")
