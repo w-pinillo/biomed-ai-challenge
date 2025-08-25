@@ -10,6 +10,12 @@ import optuna # Added Optuna import
 
 # Using iterative_train_test_split for multi-label stratification
 from iterstrat.ml_stratifiers import MultilabelStratifiedShuffleSplit
+from sklearn.preprocessing import StandardScaler
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+
+# Suppress ConvergenceWarning for this script
+warnings.filterwarnings('ignore', category=ConvergenceWarning)
 
 # Define paths
 PREPROCESSED_PATH = "data/preprocessed_articles.csv"
@@ -41,6 +47,7 @@ def objective(trial, X_train, y_train, X_val, y_val, model_type):
         raise ValueError("Unknown model type")
 
     pipeline = Pipeline([
+        ('scaler', StandardScaler()),
         ('classifier', OneVsRestClassifier(classifier))
     ])
 
@@ -104,7 +111,10 @@ def main():
     final_n_jobs = -1 if final_solver != 'liblinear' else 1
 
     final_lr_classifier = LogisticRegression(C=best_lr_params['lr_c'], solver=final_solver, random_state=42, n_jobs=final_n_jobs)
-    final_lr_pipeline = Pipeline([('classifier', OneVsRestClassifier(final_lr_classifier))])
+    final_lr_pipeline = Pipeline([
+        ('scaler', StandardScaler()),
+        ('classifier', OneVsRestClassifier(final_lr_classifier))
+    ])
     
     print("\nTraining final Logistic Regression model with best parameters on train+val set...")
     final_lr_pipeline.fit(X_train_val, y_train_val)
